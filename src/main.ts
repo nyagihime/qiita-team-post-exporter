@@ -7,17 +7,15 @@ dotenv.config()
 
 const TEAM_ID = process.env.QIITA_TEAM
 const TOKEN = process.env.QIITA_TOKEN
-const QIITA_USER_ID = process.env.TARGET_USER
 const BASE_URL = `https://${TEAM_ID}.qiita.com/api/v2/`
 const OUTDIR = process.env.OUTDIR
 const MDFILE = process.env.MDFILE
 
 /**
- * 指定されたユーザーの投稿を全部取得する
- * @param userId 
+ * 認証した本人の投稿を全部取得する
  * @returns 
  */
-const fetchAllItems = async (userId: string): Promise<any[]> => {
+const fetchAllItems = async (): Promise<any[]> => {
     const maxPages = 50 // ページング処理の最大数（もし50ページ以上、つまり5000件以上記事がある場合は、数値を調整）
 
     const perPage = 100
@@ -25,7 +23,7 @@ const fetchAllItems = async (userId: string): Promise<any[]> => {
     let list: any[] = []
 
     while(page <= maxPages) {
-        const res = await axios.get(`${BASE_URL}/users/${QIITA_USER_ID}/items`, {
+        const res = await axios.get(`${BASE_URL}/authenticated_user/items`, {
             headers: { Authorization: `Bearer ${TOKEN}` },
             params: {
                 per_page: perPage,
@@ -97,6 +95,7 @@ const buildYamlFrontMatter = (item: any): string => {
     return [
         '---',
         `title: ${item.title}`,
+        `isDraft: ${item.private}`,
         `created: ${item.created_at}`,
         `modified: ${item.updated_at}`,
         'tags:',
@@ -150,12 +149,12 @@ const savePostToMarkdown = async (item: any, outDir: string) => {
 
 
 const main = async ():Promise<void> => {
-    if (!TEAM_ID||!TOKEN||!QIITA_USER_ID) {
+    if (!TEAM_ID||!TOKEN) {
         console.error('環境変数未設定エラー')
         process.exit(1)
     }
 
-    const items = await fetchAllItems(QIITA_USER_ID)
+    const items = await fetchAllItems()
     const outDir = path.join(__dirname, OUTDIR ? `../${OUTDIR}` : '../export')
 
     // 出力先フォルダの作成
