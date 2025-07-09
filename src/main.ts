@@ -95,7 +95,6 @@ const buildYamlFrontMatter = (item: any): string => {
     return [
         '---',
         `title: ${item.title}`,
-        `isDraft: ${item.private}`,
         `created: ${item.created_at}`,
         `modified: ${item.updated_at}`,
         'tags:',
